@@ -1,38 +1,39 @@
 from pathlib import Path
+import os
 
 import pandas as pd
 import psycopg2
+from sqlalchemy import create_engine
 
+from dag.utils import read_json_file
 
-
+ROOT_PATH: Path = Path(os.path.abspath(os.path.dirname(__file__))).parent
 class Database:
-    query_repo = Path("resources")
+    QUERY_REPO_PATH: Path = ROOT_PATH / Path("resources")
 
-    def __init__(self):
-        self.host = "localhost"
-        self.port = 5432
-        self.dataabse = "dataBrain"
-        self.user = "doms"
-        self.password = ""
+    def __init__(self, credentials_path: Path):
+        self.credentials = read_json_file(credentials_path)
+
+    def get_connection_string(self):
+        user = self.credentials.get("user")
+        password = self.credentials.get("password")
+        host = self.credentials.get("host")
+        port = self.credentials.get("port")
+        database = self.credentials.get("database")
+        return f"postgresql://{user}:{password}@{host}:{port}/{database}"
 
     def execute(self, query: str) -> pd.DataFrame:
-        results = []
-        with psycopg2.connect(
-            host=self.host,
-            port=self.port,
-            database=self.database,
-            user=self.username,
-            password=self.password
-        ) as conn:
-            with conn.cursor() as cur:
-                cur.execute(query)
-                results = cur.fetchall()
-        return results
+        connection_str = self.get_connection_string()
+        engine = create_engine(connection_str)
+        result = pd.read_sql(query, engine)
+        return result
     
-    def get_query(self, query_name: str) -> str:
-        query_path = self.query_repo / f"{query_name}.sql"
+    @classmethod
+    def get_query(cls, query_name: str) -> str:
+        query_path = cls.QUERY_REPO_PATH / f"{query_name}.sql"
+        assert query_path.exists(), "Query does not exists"
         sql = []
         with open(query_path, "r") as fp:
-            sql = fp.readlines()
+            sql = fp.read()
         return sql
     

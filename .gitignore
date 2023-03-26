@@ -19,3 +19,5 @@ logs/
 config.yml
 secrets.yml
 notebooks
+credentials.json
+.vscode
