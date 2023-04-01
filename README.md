@@ -12,4 +12,4 @@ Dagster pipeline for storing financial and economical information into the datab
 - [X] Schedule the pipeline.
   - DFR Pipeline is scheduled to run every day at 00:00
 - [ ] Learn how to configure project storage space
-- [ ] Vizualize your pipeline output
+- [X] Vizualize your pipeline output
