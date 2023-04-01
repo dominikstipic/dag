@@ -7,7 +7,7 @@ from pathlib import Path
 
 
 def read_json_file(file_path: Path) -> dict:
-    assert file_path.exists(), "Path does not exist"
+    assert file_path.exists(), f"Path {file_path} does not exist"
     with open(file_path, 'r') as file:
         data = json.load(file)
     return data

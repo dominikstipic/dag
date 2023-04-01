@@ -13,7 +13,7 @@ from dag.database import Database, ROOT_PATH
 from dag.entity.interest_rate import InterestRate
 from dag.utils import df_difference
 
-ROOT_PATH: Path = Path(os.path.abspath(os.path.dirname(__file__))).parent
+ROOT_PATH: Path = Path(os.path.abspath(os.path.dirname(__file__))).parent.parent
 
 @asset(
     description="Extract the XML data for the ECB deposit facility rate"
@@ -81,4 +81,3 @@ def load_dfr(transform_dfr_primary_key: pd.DataFrame):
     transform_dfr_primary_key.to_sql(InterestRate.__tablename__, engine, if_exists='replace', index=False)
     engine.dispose()
     return result
-    
