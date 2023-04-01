@@ -6,12 +6,12 @@ import os
 
 import xml.etree.ElementTree as ET
 import pandas as pd
-from dagster import asset
+from dagster import asset, Output, MetadataValue
 from sqlalchemy import create_engine
 
 from dag.database import Database, ROOT_PATH
 from dag.entity.interest_rate import InterestRate
-from dag.utils import df_difference
+from dag.utils import df_difference, dataframe_2d_plot_to_markdown
 
 ROOT_PATH: Path = Path(os.path.abspath(os.path.dirname(__file__))).parent.parent
 
@@ -29,7 +29,7 @@ def extract_dfr() -> str:
 @asset(
     description="Transform the DFR data from XML to pandas dataframe"
 )
-def transform_dfr(extract_dfr: str) -> pd.DataFrame:
+def transform_dfr(extract_dfr: str):
     root = ET.fromstring(extract_dfr)
     data_set = root.find('.//{http://www.sdmx.org/resources/sdmxml/schemas/v2_1/message}DataSet')
     series = data_set.find('{http://www.sdmx.org/resources/sdmxml/schemas/v2_1/data/generic}Series')
@@ -47,7 +47,17 @@ def transform_dfr(extract_dfr: str) -> pd.DataFrame:
     obs_df["date"] = pd.to_datetime(obs_df["date"])
     obs_df["value"] = obs_df["value"].astype(float)
     obs_df["name"] = obs_df["name"].astype(str)
-    return obs_df
+
+    md_content = dataframe_2d_plot_to_markdown(obs_df, x_name="date", y_name="value", title="DFR")
+    row_count = len(obs_df)
+
+    return Output(
+        value=obs_df,
+        metadata={
+            "plot": MetadataValue.md(md_content),
+            "number of rows": MetadataValue.int(row_count)
+        }
+    )
 
 @asset(
     description="Creates new id column based on the hash of the combined columns"
